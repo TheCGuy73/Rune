@@ -1,61 +1,58 @@
 #include "parser.h"
-#include <cctype>
-#include <stdexcept>
-#include <string>
-#include <memory>
 #include <sstream>
-
-namespace {
-
-enum TokenType { NUM, ID, WHAT, COLON, TYPE, ASSIGN, PLUS, MINUS, MUL, DIV, MOD, AND, OR, LPAREN, RPAREN, END, EQ };
+#include <stdexcept>
+#include <cctype>
+#include <memory>
 
 struct Token {
     TokenType type;
-    std::string text;
     int value;
+    std::string text;
 };
 
 class Lexer {
-    const std::string& text;
-    size_t pos = 0;
+    std::istringstream in;
+    char curr;
+    void next_char() { curr = in.get(); }
 public:
-    Lexer(const std::string& s) : text(s) {}
+    explicit Lexer(const std::string& s) : in(s), curr(0) { next_char(); }
     Token next() {
-        while (pos < text.size() && std::isspace(text[pos])) ++pos;
-        if (pos >= text.size() || text[pos] == ';') {
-            if (pos < text.size() && text[pos] == ';') ++pos;
-            return {END, "", 0};
+        while (curr != EOF && std::isspace(curr)) next_char();
+        if (curr == EOF || curr == -1) return {END, 0, ""};
+        if (std::isdigit(curr)) {
+            int v = 0;
+            while (std::isdigit(curr)) {
+                v = v * 10 + (curr - '0');
+                next_char();
+            }
+            return {NUM, v, ""};
         }
-
-        if (std::isdigit(text[pos])) {
-            int n = 0;
-            while (pos < text.size() && std::isdigit(text[pos]))
-                n = n * 10 + (text[pos++] - '0');
-            return {NUM, "", n};
+        if (std::isalpha(curr)) {
+            std::string id;
+            while (std::isalnum(curr)) {
+                id += curr;
+                next_char();
+            }
+            if (id == "what") return {WHAT, 0, ""};
+            if (id == "int") return {TYPE, 0, ""};
+            return {ID, 0, id};
         }
-
-        if (std::isalpha(text[pos]) || text[pos] == '_') {
-            size_t start = pos;
-            while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == '_'))
-                ++pos;
-            std::string word = text.substr(start, pos - start);
-            if (word == "what") return {WHAT, "", 0};
-            if (word == "int") return {TYPE, "", 0};
-            return {ID, word, 0};
+        switch (curr) {
+        case ':': next_char(); return {COLON, 0, ""};
+        case '=': next_char(); return {ASSIGN, 0, ""};
+        case '+': next_char(); return {PLUS, 0, ""};
+        case '-': next_char(); return {MINUS, 0, ""};
+        case '*': next_char(); return {MUL, 0, ""};
+        case '/': next_char(); return {DIV, 0, ""};
+        case '%': next_char(); return {MOD, 0, ""};
+        case '&': next_char(); return {AND, 0, ""};
+        case '|': next_char(); return {OR, 0, ""};
+        case '(': next_char(); return {LPAREN, 0, ""};
+        case ')': next_char(); return {RPAREN, 0, ""};
+        case ';': next_char(); return {SEMICOLON, 0, ""};
+        default:
+            throw std::runtime_error("Invalid character");
         }
-
-        if (text[pos] == ':') { ++pos; return {COLON, "", 0}; }
-        if (text[pos] == '=') { ++pos; return {ASSIGN, "", 0}; }
-        if (text[pos] == '+') { ++pos; return {PLUS, "", 0}; }
-        if (text[pos] == '-') { ++pos; return {MINUS, "", 0}; }
-        if (text[pos] == '*') { ++pos; return {MUL, "", 0}; }
-        if (text[pos] == '/') { ++pos; return {DIV, "", 0}; }
-        if (text[pos] == '%') { ++pos; return {MOD, "", 0}; }
-        if (text.substr(pos,2) == "&&") { pos += 2; return {AND, "", 0}; }
-        if (text.substr(pos,2) == "||") { pos += 2; return {OR, "", 0}; }
-        if (text[pos] == '(') { ++pos; return {LPAREN, "", 0}; }
-        if (text[pos] == ')') { ++pos; return {RPAREN, "", 0}; }
-        throw std::runtime_error("Invalid character");
     }
 };
 
@@ -67,7 +64,7 @@ public:
     explicit ParserImpl(const std::string& s) : lex(s) { next(); }
     std::unique_ptr<Expr> parse() {
         auto node = statement();
-        if (curr.type != END)
+        if (curr.type != SEMICOLON)
             throw std::runtime_error("Expected ';' at end of statement");
         next();
         if (curr.type != END)
@@ -94,6 +91,7 @@ private:
     }
 
     std::unique_ptr<Expr> expr() { return or_expr(); }
+
     std::unique_ptr<Expr> or_expr() {
         auto node = and_expr();
         while (curr.type == OR) {
@@ -153,9 +151,6 @@ private:
     }
 };
 
-} // end anonymous namespace
-
 std::unique_ptr<Expr> Parser::parse(const std::string& line) {
-    ParserImpl p(line);
-    return p.parse();
+    return ParserImpl(line).parse();
 }

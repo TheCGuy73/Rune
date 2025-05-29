@@ -4,6 +4,11 @@
 #include <unordered_map>
 #include <stdexcept>
 
+enum TokenType {
+    END, NUM, ID, WHAT, COLON, TYPE, ASSIGN,
+    PLUS, MINUS, MUL, DIV, MOD, AND, OR, LPAREN, RPAREN, SEMICOLON
+};
+
 struct Context {
     std::unordered_map<std::string, int> variables;
 };
@@ -31,35 +36,35 @@ struct Variable : Expr {
 };
 
 struct BinOp : Expr {
-    int op;
+    TokenType op;
     std::unique_ptr<Expr> left, right;
-    BinOp(int op, std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
+    BinOp(TokenType op, std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
         : op(op), left(std::move(l)), right(std::move(r)) {}
     int eval(Context& ctx) const override {
         int a = left->eval(ctx), b = right->eval(ctx);
         switch(op) {
-        case 6:  // PLUS
+        case PLUS:
             return a + b;
-        case 7:  // MINUS
+        case MINUS:
             return a - b;
-        case 8:  // MUL
+        case MUL:
             return a * b;
-        case 9:  // DIV
+        case DIV:
             if (b == 0) throw std::runtime_error("Division by zero");
             return a / b;
-        case 10: // MOD
+        case MOD:
             if (b == 0) throw std::runtime_error("Modulo by zero");
             return a % b;
-        case 11: // AND
+        case AND:
             return a && b;
-        case 12: // OR
+        case OR:
             return a || b;
         default:
             throw std::runtime_error("Unknown operator");
         }
     }
     bool is_logical() const override {
-        return op == 11 || op == 12; // AND or OR
+        return op == AND || op == OR;
     }
 };
 

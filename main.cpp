@@ -6,7 +6,8 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <file.rn>" << std::endl;
+        std::cerr << "Errore: devi specificare un file da interpretare.\n";
+        std::cerr << "Esempio d'uso: " << argv[0] << " script.rn\n";
         return 1;
     }
 
