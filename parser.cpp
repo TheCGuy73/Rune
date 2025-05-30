@@ -1,6 +1,5 @@
 #include "parser.h"
 #include <sstream>
-<<<<<<< HEAD
 #include <vector>
 
 // Forward declarations for types used in this file
@@ -18,27 +17,19 @@ enum TokenType {
 
 struct Token {
     TokenType type;
-=======
-#include <stdexcept>
-#include <cctype>
-#include <memory>
-
-struct Token {
-    TokenType type;
-    int value;
->>>>>>> origin/testing
     std::string text;
 };
 
 // Lexer with logic symbols
 class Lexer {
+    std::string text;
+    size_t pos = 0;
     std::istringstream in;
     char curr;
     void next_char() { curr = in.get(); }
 public:
-    explicit Lexer(const std::string& s) : in(s), curr(0) { next_char(); }
+    explicit Lexer(const std::string& s) : text(s), pos(0), in(s), curr(0) { next_char(); }
     Token next() {
-<<<<<<< HEAD
         while (pos < text.size() && std::isspace(text[pos])) ++pos;
         if (pos >= text.size()) return {END, ""};
 
@@ -118,44 +109,6 @@ struct LogicOp : Expr {
     VoltType getType(Context&) const override { return VoltType::INT; }
     std::string toLLVMIR(Context&, std::string&) const override {
         return "; logic op not yet implemented in IR";
-=======
-        while (curr != EOF && std::isspace(curr)) next_char();
-        if (curr == EOF || curr == -1) return {END, 0, ""};
-        if (std::isdigit(curr)) {
-            int v = 0;
-            while (std::isdigit(curr)) {
-                v = v * 10 + (curr - '0');
-                next_char();
-            }
-            return {NUM, v, ""};
-        }
-        if (std::isalpha(curr)) {
-            std::string id;
-            while (std::isalnum(curr)) {
-                id += curr;
-                next_char();
-            }
-            if (id == "what") return {WHAT, 0, ""};
-            if (id == "int") return {TYPE, 0, ""};
-            return {ID, 0, id};
-        }
-        switch (curr) {
-        case ':': next_char(); return {COLON, 0, ""};
-        case '=': next_char(); return {ASSIGN, 0, ""};
-        case '+': next_char(); return {PLUS, 0, ""};
-        case '-': next_char(); return {MINUS, 0, ""};
-        case '*': next_char(); return {MUL, 0, ""};
-        case '/': next_char(); return {DIV, 0, ""};
-        case '%': next_char(); return {MOD, 0, ""};
-        case '&': next_char(); return {AND, 0, ""};
-        case '|': next_char(); return {OR, 0, ""};
-        case '(': next_char(); return {LPAREN, 0, ""};
-        case ')': next_char(); return {RPAREN, 0, ""};
-        case ';': next_char(); return {SEMICOLON, 0, ""};
-        default:
-            throw std::runtime_error("Invalid character");
-        }
->>>>>>> origin/testing
     }
 };
 
@@ -201,7 +154,6 @@ private:
         return expr(default_type);
     }
 
-<<<<<<< HEAD
     std::unique_ptr<Expr> if_statement() {
         next();
         auto if_cond = expr(VoltType::INT);
@@ -273,12 +225,6 @@ private:
     }
     std::unique_ptr<Expr> or_expr(VoltType vtype) {
         auto node = and_expr(vtype);
-=======
-    std::unique_ptr<Expr> expr() { return or_expr(); }
-
-    std::unique_ptr<Expr> or_expr() {
-        auto node = and_expr();
->>>>>>> origin/testing
         while (curr.type == OR) {
             next();
             node = std::make_unique<BinOp>(12, std::move(node), and_expr(vtype));
@@ -369,8 +315,9 @@ private:
         }
         throw std::runtime_error("Expected number, variable or '('");
     }
-};
+} // end anonymous namespace
 
+// Implementation of Parser::parse must be outside the anonymous namespace
 std::unique_ptr<Expr> Parser::parse(const std::string& line) {
     return ParserImpl(line).parse();
 }
