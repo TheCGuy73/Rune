@@ -6,13 +6,20 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <file.rn>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <file.volt>" << std::endl;
         return 1;
     }
 
-    std::ifstream infile(argv[1]);
+    std::string filename = argv[1];
+    // Verifica che il file abbia estensione .volt
+    if (filename.size() < 5 || filename.substr(filename.size() - 5) != ".volt") {
+        std::cerr << "Il file deve avere estensione .volt" << std::endl;
+        return 1;
+    }
+
+    std::ifstream infile(filename);
     if (!infile) {
-        std::cerr << "Could not open file " << argv[1] << std::endl;
+        std::cerr << "Could not open file " << filename << std::endl;
         return 1;
     }
 
