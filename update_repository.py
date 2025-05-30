@@ -19,6 +19,7 @@ def update_repository(origin: str, branch: str) -> None:
     os.system("git add .")
     os.system(f'git commit -m "{commit_message_formatted}"')
     os.system(f"git push {origin} {branch}")
+    print(f"Current update: ({commit_message_formatted}) ")
 
 origin = input("Enter Origin: ")
 branch = input("Enter Branch: ")
