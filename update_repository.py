@@ -8,7 +8,7 @@ def update_repository(version: str,origin: str, branch: str) -> None:
     BRANCH = branch
     ORIGIN = origin
     commit_message = str(input("Enter commit message: "))
-    commit_message_formatted = commit_message + f" [VERSION: {VERSION}-{ORIGIN}/{BRANCH}, BUILD:{COMMIT_FORMAT}]"
+    commit_message_formatted = commit_message + f" [VERSION: {VERSION}-{ORIGIN}/{BRANCH}, BUILD: {COMMIT_FORMAT}]"
     remote_url = input("Enter remote URL: ")
     
     # Check if remote exists, if not, add it
