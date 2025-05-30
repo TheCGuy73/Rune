@@ -6,7 +6,12 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
+<<<<<<< HEAD
         std::cerr << "Usage: " << argv[0] << " <file.volt>" << std::endl;
+=======
+        std::cerr << "Errore: devi specificare un file da interpretare.\n";
+        std::cerr << "Esempio d'uso: " << argv[0] << " script.rn\n";
+>>>>>>> origin/testing
         return 1;
     }
 
