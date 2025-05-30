@@ -6,13 +6,14 @@ def update_repository(origin: str, branch: str) -> None:
     COMMIT_FORMAT = f"{CURRENT_DATE}:{CURRENT_TIME}"
     commit_message = str(input("Enter commit message: "))
     commit_message_formatted = commit_message + f" [{COMMIT_FORMAT}]"
+    remote_url = input("Enter remote URL: ")
     
     # Check if remote exists, if not, add it
     remote_check = os.system(f"git remote get-url {origin}")
     if remote_check != 0:
-        os.system(f"git remote add {origin} <REMOTE_URL_HERE>")
+        os.system(f"git remote add {origin} {remote_url}")
     else:
-        os.system(f"git remote set-url {origin} <REMOTE_URL_HERE>")
+        os.system(f"git remote set-url {origin} {remote_url}")
     os.system(f"git checkout {branch}")
     os.system("git pull")
     os.system("git add .")
