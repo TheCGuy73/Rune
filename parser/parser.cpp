@@ -1,18 +1,28 @@
 #include "parser.h"
 #include <sstream>
 #include <vector>
+#include <memory>
+#include <string>
+#include <stdexcept>
+#include <initializer_list>
 
-// Forward declarations for types used in this file
+// Forward declarations in caso non siano già dichiarati negli header
+class Expr;
 class Context;
+class BinOp;
+class Number;
+class Variable;
+class VarDeclaration;
+class IfStatement;
+enum class VoltType;
 
 namespace {
 
-// Token types including logic symbols
 enum TokenType {
     NUM, ID, WHAT, COLON, TYPE, ASSIGN, PLUS, MINUS, MUL, DIV, MOD,
     AND, OR, LPAREN, RPAREN, END, SEMICOLON,
     IF, THEN, ELSE, ELSEIF, ENDIF,
-    GT, LT, GTE, LTE, DI // LOGIC SYMBOLS: gt, lt, gte, lte, di
+    GT, LT, GTE, LTE, DI
 };
 
 struct Token {
@@ -20,7 +30,6 @@ struct Token {
     std::string text;
 };
 
-// Lexer with logic symbols
 class Lexer {
     std::string text;
     size_t pos = 0;
@@ -34,7 +43,6 @@ public:
         if (pos >= text.size()) return {END, ""};
 
         if (text[pos] == ';') { ++pos; return {SEMICOLON, ";"}; }
-        // numbers
         if (std::isdigit(text[pos]) || (text[pos] == '.' && pos + 1 < text.size() && std::isdigit(text[pos + 1]))) {
             size_t start = pos;
             bool has_dot = false;
@@ -47,7 +55,6 @@ public:
             }
             return {NUM, text.substr(start, pos - start)};
         }
-        // identifiers, keywords, and logic symbols
         if (std::isalpha(text[pos]) || text[pos] == '_') {
             size_t start = pos;
             while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == '_')) ++pos;
@@ -59,7 +66,6 @@ public:
             if (word == "else") return {ELSE, ""};
             if (word == "elseif") return {ELSEIF, ""};
             if (word == "endif") return {ENDIF, ""};
-            // logic symbols
             if (word == "gt") return {GT, "gt"};
             if (word == "lt") return {LT, "lt"};
             if (word == "gte") return {GTE, "gte"};
@@ -71,7 +77,7 @@ public:
         if (text[pos] == '=') {
             if (pos+1 < text.size() && text[pos+1] == '=') {
                 pos += 2;
-                return {DI, "=="}; // Not used in this grammar, but left for extensibility
+                return {DI, "=="};
             }
             ++pos; return {ASSIGN, "="};
         }
@@ -84,10 +90,9 @@ public:
         if (text.substr(pos,2) == "||") { pos += 2; return {OR, "||"}; }
         if (text[pos] == '(') { ++pos; return {LPAREN, "("}; }
         if (text[pos] == ')') { ++pos; return {RPAREN, ")"}; }
-        // classic comparison symbols for completeness
         if (text[pos] == '>') {
             if (pos+1 < text.size() && text[pos+1] == '=') { pos+=2; return {GTE, ">="}; }
-            ++pos; return {GT, ">"}; 
+            ++pos; return {GT, ">"};
         }
         if (text[pos] == '<') {
             if (pos+1 < text.size() && text[pos+1] == '=') { pos+=2; return {LTE, "<="}; }
@@ -196,7 +201,6 @@ private:
         std::vector<std::unique_ptr<Expr>> statements;
         while (true) {
             for (auto t : stopTokens) if (curr.type == t) return statements;
-            // Allow empty statements (just a semicolon)
             if (curr.type == SEMICOLON) {
                 next();
                 continue;
@@ -208,9 +212,7 @@ private:
         }
     }
 
-    // Logic expression handling
     std::unique_ptr<Expr> expr(VoltType vtype) { return logic_expr(vtype); }
-
     std::unique_ptr<Expr> logic_expr(VoltType vtype) {
         auto node = or_expr(vtype);
         while (is_logic_op(curr.type)) {
@@ -296,7 +298,6 @@ private:
         if (curr.type == ID) {
             std::string name = curr.text;
             next();
-            // If the next token is a logic operator, parse as logic expression
             if (is_logic_op(curr.type)) {
                 auto left = std::make_unique<Variable>(name);
                 TokenType op = curr.type;
@@ -315,9 +316,11 @@ private:
         }
         throw std::runtime_error("Expected number, variable or '('");
     }
+}; // end ParserImpl
+
 } // end anonymous namespace
 
-// Implementation of Parser::parse must be outside the anonymous namespace
+// Implementazione di Parser::parse fuori dal namespace anonimo
 std::unique_ptr<Expr> Parser::parse(const std::string& line) {
     return ParserImpl(line).parse();
 }
