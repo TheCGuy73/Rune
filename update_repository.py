@@ -13,7 +13,7 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     commit_format = f"{current_date}:{current_time}"
     # Usa il messaggio personalizzato se fornito, altrimenti quello di default
     if user_commit_msg:
-        commit_message = user_commit_msg
+        commit_message = f"{user_commit_msg} [VERSION: {version}-{origin}/{branch}, COMMIT: {commit_format}]"
     else:
         commit_message = f"Update repository [VERSION: {version}-{origin}/{branch}, COMMIT: {commit_format}]"
 
