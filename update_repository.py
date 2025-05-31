@@ -1,63 +1,74 @@
 import os
 import datetime
+import subprocess
 
-def update_repository(version: str, origin: str, branch: str, origin_url:str="https://github.com/TheCGuy73/voltage.git") -> None:
-    CURRENT_DATE = datetime.datetime.now().strftime("%Y%m%d")
-    CURRENT_TIME = datetime.datetime.now().strftime("%I%M%S")
-    COMMIT_FORMAT = f"{CURRENT_DATE}:{CURRENT_TIME}"
-    VERSION = version
-    BRANCH = branch
-    ORIGIN = origin
-    commit_message = str(input("Enter commit message: "))
-    if commit_message == "":
-        commit_message = "Update repository"
-    commit_message_formatted = commit_message + f" [VERSION: {VERSION}-{ORIGIN}/{BRANCH}, BUILD: {COMMIT_FORMAT}]"
-    remote_url = input("Enter remote URL: ")
-    if remote_url == "":
-        remote_url = origin_url
-    # Percorsi nella cartella docs
-    cache_path = os.path.join("docs", "cache.txt")
-    history_path = os.path.join("docs", "COMMIT_HISTORY.md")
+def run(cmd):
+    result = subprocess.run(cmd, shell=True)
+    return result.returncode
 
-    # Assicurati che la cartella docs esista
-    os.makedirs("docs", exist_ok=True)
+def update_repository(version, origin, branch, origin_url, repo_path, user_commit_msg=None):
+    os.chdir(repo_path)
+    current_date = datetime.datetime.now().strftime("%Y%m%d")
+    current_time = datetime.datetime.now().strftime("%H%M%S")
+    commit_format = f"{current_date}:{current_time}"
+    # Usa il messaggio personalizzato se fornito, altrimenti quello di default
+    if user_commit_msg:
+        commit_message = user_commit_msg
+    else:
+        commit_message = f"Update repository [VERSION: {version}-{origin}/{branch}, BUILD: {commit_format}]"
 
-    # Write the commit message to docs/cache.txt
+    docs_dir = os.path.join(repo_path, "docs")
+    cache_path = os.path.join(docs_dir, "cache.txt")
+    history_path = os.path.join(docs_dir, "COMMIT_HISTORY.md")
+    os.makedirs(docs_dir, exist_ok=True)
+
     with open(cache_path, "w", encoding="utf-8") as cache_file:
-        cache_file.write(commit_message_formatted + "\n")
-    
-    # Check if remote exists, if not, add it
-    remote_check = os.system(f"git remote get-url {origin}")
-    if remote_check != 0:
-        os.system(f"git remote add {origin} {remote_url}")
+        cache_file.write(commit_message + "\n")
+
+    # Configura remote
+    if run(f"git remote get-url {origin}") != 0:
+        run(f"git remote add {origin} {origin_url}")
     else:
-        os.system(f"git remote set-url {origin} {remote_url}")
-    # Ensure the branch exists before checking out
-    branch_exists = os.system(f"git rev-parse --verify {branch}") == 0
-    if not branch_exists:
-        os.system(f"git checkout -b {branch}")
+        run(f"git remote set-url {origin} {origin_url}")
+
+    # Checkout branch
+    if run(f"git rev-parse --verify {branch}") != 0:
+        run(f"git checkout -b {branch}")
     else:
-        os.system(f"git checkout {branch}")
-    os.system("git pull")
-    os.system("git add .")
-    commit_result = os.system(f'git commit -m "{commit_message_formatted}"')
+        run(f"git checkout {branch}")
+
+    run("git pull")
+    run("git add .")
+    commit_result = run(f'git commit -m "{commit_message}"')
     if commit_result != 0:
         print("No changes to commit.")
     else:
-        os.system(f"git push {origin} {branch}")
-    print(f"Current update: ({commit_message_formatted}) ")
+        run(f"git push {origin} {branch}")
+    print(f"Current update: ({commit_message})")
 
-    # Append the commit message from docs/cache.txt to docs/COMMIT_HISTORY.md
+    # Aggiorna la cronologia dei commit
     if os.path.exists(cache_path):
         with open(cache_path, "r", encoding="utf-8") as cache_file:
             cache_content = cache_file.read()
         with open(history_path, "a", encoding="utf-8") as history_file:
             history_file.write(cache_content)
-        # Remove docs/cache.txt after transferring its content
         os.remove(cache_path)
 
-origin = input("Enter Origin: ")
-branch = input("Enter Branch: ")
-version = input("Enter Version: ")
+def main():
+    print("=== Aggiornamento repository Git ===")
+    repo = input("Percorso della repository (lascia vuoto per usare la cartella corrente): ").strip()
+    if not repo:
+        repo = os.getcwd()  # Usa la cartella corrente come default
+    origin = input("Nome remote (es. origin): ").strip()
+    branch = input("Nome branch: ").strip()
+    version = input("Versione: ").strip()
+    origin_url = input("URL remote (lascia vuoto per default): ").strip()
+    user_commit_msg = input("Messaggio di commit (lascia vuoto per default): ").strip()
+    if not origin_url:
+        origin_url = f"https://github.com/youruser/{os.path.basename(repo)}.git"
+    if not user_commit_msg:
+        user_commit_msg = None
+    update_repository(version, origin, branch, origin_url, repo, user_commit_msg)
 
-update_repository(version, origin, branch)
+if __name__ == "__main__":
+    main()
