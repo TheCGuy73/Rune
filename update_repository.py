@@ -15,7 +15,7 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     if user_commit_msg:
         commit_message = user_commit_msg
     else:
-        commit_message = f"Update repository [VERSION: {version}-{origin}/{branch}, BUILD: {commit_format}]"
+        commit_message = f"Update repository [VERSION: {version}-{origin}/{branch}, COMMIT: {commit_format}]"
 
     docs_dir = os.path.join(repo_path, "docs")
     cache_path = os.path.join(docs_dir, "cache.txt")
