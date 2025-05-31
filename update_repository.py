@@ -1,7 +1,7 @@
 import os
 import datetime
 
-def update_repository(version: str, origin: str, branch: str) -> None:
+def update_repository(version: str, origin: str, branch: str, origin_url:str="https://github.com/TheCGuy73/voltage.git") -> None:
     CURRENT_DATE = datetime.datetime.now().strftime("%Y%m%d")
     CURRENT_TIME = datetime.datetime.now().strftime("%I%M%S")
     COMMIT_FORMAT = f"{CURRENT_DATE}:{CURRENT_TIME}"
@@ -9,9 +9,12 @@ def update_repository(version: str, origin: str, branch: str) -> None:
     BRANCH = branch
     ORIGIN = origin
     commit_message = str(input("Enter commit message: "))
+    if commit_message == "":
+        commit_message = "Update repository"
     commit_message_formatted = commit_message + f" [VERSION: {VERSION}-{ORIGIN}/{BRANCH}, BUILD: {COMMIT_FORMAT}]"
     remote_url = input("Enter remote URL: ")
-
+    if remote_url == "":
+        remote_url = origin_url
     # Percorsi nella cartella docs
     cache_path = os.path.join("docs", "cache.txt")
     history_path = os.path.join("docs", "COMMIT_HISTORY.md")
