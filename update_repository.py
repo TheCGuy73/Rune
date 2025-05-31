@@ -32,11 +32,19 @@ def update_repository(version: str, origin: str, branch: str, origin_url:str="ht
         os.system(f"git remote add {origin} {remote_url}")
     else:
         os.system(f"git remote set-url {origin} {remote_url}")
-    os.system(f"git checkout {branch}")
+    # Ensure the branch exists before checking out
+    branch_exists = os.system(f"git rev-parse --verify {branch}") == 0
+    if not branch_exists:
+        os.system(f"git checkout -b {branch}")
+    else:
+        os.system(f"git checkout {branch}")
     os.system("git pull")
     os.system("git add .")
-    os.system(f'git commit -m "{commit_message_formatted}"')
-    os.system(f"git push {origin} {branch}")
+    commit_result = os.system(f'git commit -m "{commit_message_formatted}"')
+    if commit_result != 0:
+        print("No changes to commit.")
+    else:
+        os.system(f"git push {origin} {branch}")
     print(f"Current update: ({commit_message_formatted}) ")
 
     # Append the commit message from docs/cache.txt to docs/COMMIT_HISTORY.md
