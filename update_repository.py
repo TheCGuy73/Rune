@@ -38,6 +38,15 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
         run(f"git checkout {branch}")
 
     run("git pull")
+
+    # Aggiorna la cronologia dei commit PRIMA del commit
+    if os.path.exists(cache_path):
+        with open(cache_path, "r", encoding="utf-8") as cache_file:
+            cache_content = cache_file.read()
+        with open(history_path, "a", encoding="utf-8") as history_file:
+            history_file.write(cache_content)
+        os.remove(cache_path)
+
     run("git add .")
     commit_result = run(f'git commit -m "{commit_message}"')
     if commit_result != 0:
@@ -45,14 +54,6 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     else:
         run(f"git push {origin} {branch}")
     print(f"Current update: ({commit_message})")
-
-    # Aggiorna la cronologia dei commit
-    if os.path.exists(cache_path):
-        with open(cache_path, "r", encoding="utf-8") as cache_file:
-            cache_content = cache_file.read()
-        with open(history_path, "a", encoding="utf-8") as history_file:
-            history_file.write(cache_content)
-        os.remove(cache_path)
 
 def main():
     print("=== Aggiornamento repository Git ===")
