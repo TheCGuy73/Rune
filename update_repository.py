@@ -11,7 +11,7 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     current_date = datetime.datetime.now().strftime("%Y%m%d")
     current_time = datetime.datetime.now().strftime("%H%M%S")
     commit_format = f"{current_date}:{current_time}"
-    # Usa il messaggio personalizzato se fornito, altrimenti quello di default
+    # Use the custom message if provided, otherwise the default one
     if user_commit_msg:
         commit_message = f"{user_commit_msg} [VERSION: {version}-{origin}/{branch}, COMMIT: {commit_format}]"
     else:
@@ -25,7 +25,7 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     with open(cache_path, "w", encoding="utf-8") as cache_file:
         cache_file.write(commit_message + "\n")
 
-    # Configura remote
+    # Configure remote
     if run(f"git remote get-url {origin}") != 0:
         run(f"git remote add {origin} {origin_url}")
     else:
@@ -39,7 +39,7 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
 
     run("git pull")
 
-    # Aggiorna la cronologia dei commit PRIMA del commit
+    # Update commit history BEFORE the commit
     if os.path.exists(cache_path):
         with open(cache_path, "r", encoding="utf-8") as cache_file:
             cache_content = cache_file.read()
@@ -56,15 +56,15 @@ def update_repository(version, origin, branch, origin_url, repo_path, user_commi
     print(f"Current update: ({commit_message})")
 
 def main():
-    print("=== Aggiornamento repository Git ===")
-    repo = input("Percorso della repository (lascia vuoto per usare la cartella corrente): ").strip()
+    print("=== Git Repository Update ===")
+    repo = input("Repository path (leave empty to use current folder): ").strip()
     if not repo:
-        repo = os.getcwd()  # Usa la cartella corrente come default
-    origin = input("Nome remote (es. origin): ").strip()
-    branch = input("Nome branch: ").strip()
-    version = input("Versione: ").strip()
-    origin_url = input("URL remote (lascia vuoto per default): ").strip()
-    user_commit_msg = input("Messaggio di commit (lascia vuoto per default): ").strip()
+        repo = os.getcwd()  # Use current folder as default
+    origin = input("Remote name (e.g. origin): ").strip()
+    branch = input("Branch name: ").strip()
+    version = input("Version: ").strip()
+    origin_url = input("Remote URL (leave empty for default): ").strip()
+    user_commit_msg = input("Commit message (leave empty for default): ").strip()
     if not origin_url:
         origin_url = f"https://github.com/youruser/{os.path.basename(repo)}.git"
     if not user_commit_msg:
